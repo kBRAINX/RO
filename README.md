@@ -1,83 +1,173 @@
-Description du code.
+# Service d'Authentification
 
-Le code est divisé en 2 parties et reparti sur deux branches (master et Celeste) : 
+Service d'authentification simple avec Express.js, PostgreSQL et JWT.
 
-- la branche Celeste contient le code du frontend en lui-même. Ici, on recupère les points de la BD contenant les biens immobiliers (en envoyant une requête à l'api developpée par Romial) et on les affiche sur la carte. 
-  
-- la branche master est une application express (api) qui permet de créér et d'authentifier les utilisateurs, d'ajouter, de modifier et de supprimer un bien trouvé dans une autre BD.
+## Fonctionnalités
 
-Etapes pour lancer l'application
+- ✅ Inscription d'utilisateur
+- ✅ Connexion avec JWT
+- ✅ Récupération du profil utilisateur
+- ✅ Middleware d'authentification
+- ✅ Hachage sécurisé des mots de passe
+- ✅ Configuration via variables d'environnement
 
-Pré-requis:
-   - avoir une version LTS de nodejs installée :
-     
-  	sudo sh -c 'curl -fsSL https://deb.nodesource.com/setup_21.x | bash - &&apt-get install -y nodejs'
-   
-   - installer angular :
-     
-  	sudo npm install -g @angular/cli
+## Prérequis
 
+- Node.js (version LTS)
+- PostgreSQL
+- npm ou yarn
 
-A-Lancer le frontend(code sur la branche Celeste)
+## Installation
 
-1- Ouvrir un terminal
+1. **Cloner le projet**
+```bash
+git clone <url-du-repo>
+cd auth-service
+```
 
-2- cloner le repository: 
-	
- 	git clone https://github.com/cestou/frontend.git		
+2. **Installer les dépendances**
+```bash
+npm install
+```
 
-3- Une fois le dépot cloné, se placer dans le repertoire où il a été cloné et se connecter à la branche Celeste: 
-	
- 	git checkout Celeste
+3. **Configuration de l'environnement**
+```bash
+cp .env.example .env
+```
+Modifier le fichier `.env` avec vos paramètres de base de données.
 
-4- installer les nodes modules: 
-	
- 	npm install --force
+4. **Créer la base de données PostgreSQL**
+```sql
+CREATE DATABASE DB_NAME;
+```
 
-5- definir le fichier des types pour leaflet et geoportal-extensions-leaflet:
+5. **Generer la cle secrete**
+```bash
+node generate-secret.js
+```
 
-    - cd node_modules/@types
-    - mkdir leaflet
-    - mkdir geoportal-extensions-leaflet
-    - cd leaflet
-    - echo declare module "'leaflet'">> index.d.ts
-    - cd ../geoportal-extensions-leaflet
-    - echo declare module "'geoportal-extensions-leaflet'">> index.d.ts
-		
-  En effet, il s'agit de definir le fichier de type qui sera utilisé par typescript, car ces bibliothèques sont des bibliothèques javascript,d'où l'interet de definir les fichiers types
-  
-6- lancer le frontend : 
+5. **Lancer le serveur**
+```bash
+# En mode développement
+npm run dev
 
-	ng serve
+# En mode production
+npm start
+```
 
-A ce niveau, on a normalement accès à l'inl'terface de connexion de application, il ne reste plus qu'à lancer l'api dont le code est sur la branche master pour pouvoir créer un compte/ se connecter.
+Le serveur sera accessible sur `http://localhost:3001`
 
-Attention : 
-- A ce jour, l'ip du serveur sur lequel tourne l'application express est 10.*.*.198. En cas de migration, il faudra se rendre dans le fichier serveur.ts(qui est dans le fichier src à la racine du projet) et modifier le contenu de la variable apiUrl en renseignant la nouvelle ip du serveur
-- L'ip du serveur sur lequel tourne l'api de Romial est 10.*.*.198. En cas de migration, il faudra se rendre dans le fichier serveur.ts (qui est dans le fichier src à la racine du projet) et changer le contenu de la variable apiRomial en renseignant la nouvelle ip du serveur.
+## Routes API
 
+### Inscription
+```
+POST /api/auth/register
+Content-Type: application/json
 
-B-Lancer l'application express(code sur la branche master)
+{
+  "email": "user@example.com",
+  "password": "motdepasse123"
+}
+```
 
-1- Ouvrir un autre terminal
+### Connexion
+```
+POST /api/auth/login
+Content-Type: application/json
 
-2- cloner le repository: 
+{
+  "email": "user@example.com",
+  "password": "motdepasse123"
+}
+```
 
-	git clone https://github.com/cestou/frontend.git		
+### Profil utilisateur (authentifié)
+```
+GET /api/auth/profile
+Authorization: Bearer <token>
+```
 
-3- Une fois le dépot cloné, se placer dans le repertoire où il a été cloné et se connecter à la branche master: 
+## Réponses API
 
-	git checkout master
+### Succès
+```json
+{
+  "success": true,
+  "message": "Message de succès",
+  "user": { ... },
+  "token": "jwt_token"
+}
+```
 
-4- installer les nodes modules: 
+### Erreur
+```json
+{
+  "success": false,
+  "message": "Message d'erreur"
+}
+```
 
-	npm install 
+## Variables d'environnement
 
-5- renseigner les informations de connexion à votre BD dans le fichier configBD.js situé à la racine du projet : 
+```env
+# Serveur
+PORT=3001
 
-	nano configBD.js et modifier le fichier
+# Base de données
+DB_USER=votre_utilisateur
+DB_PASSWORD=votre_mot_de_passe
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=DB_NAME
 
-6- lancer l'application : 
+# JWT
+JWT_SECRET=votre_clé_secrète_très_sécurisée
+```
 
-	node server.js
+## Structure du projet
 
+```
+auth-service/
+├── .env                    # Variables d'environnement
+├── .gitignore             # Fichiers à ignorer
+├── package.json           # Dépendances et scripts
+├── server.js              # Point d'entrée du serveur
+├── app.js                 # Configuration Express
+├── config/
+│   └── database.js        # Configuration base de données
+├── middleware/
+│   └── auth.js            # Middleware d'authentification
+├── controllers/
+│   └── user.js            # Logique métier utilisateur
+└── routes/
+    └── user.js            # Routes utilisateur
+```
+
+## Sécurité
+
+- Les mots de passe sont hachés avec bcrypt (cost factor: 12)
+- Les tokens JWT expirent après 24h
+- Validation des données d'entrée
+- Protection CORS configurée
+
+## Tests avec curl
+
+### Inscription
+```bash
+curl -X POST http://localhost:3001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"123456"}'
+```
+
+### Connexion
+```bash
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"123456"}'
+```
+
+### Profil (remplacer TOKEN par le token reçu)
+```bash
+curl -X GET http://localhost:3001/api/auth/profile \
+  -H "Authorization: Bearer TOKEN"
+```

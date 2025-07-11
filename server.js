@@ -1,47 +1,36 @@
-const http = require('http');
-const app = require('./app');
+require('dotenv').config();
+const express = require('express');
+const authRoutes = require('./routes/authRoutes');
 
-const normalizePort = val => {
-  const port = parseInt(val, 10);
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-  if (isNaN(port)) {
-    return val;
-  }
-  if (port >= 0) {
-    return port;
-  }
-  return false;
-};
-const port = normalizePort(process.env.PORT || '3001');
-app.set('port', port);
+// Middleware
+app.use(express.json());
 
-const errorHandler = error => {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
-  const address = server.address();
-  const bind = typeof address === 'string' ? 'pipe ' + address : 'port: ' + port;
-  switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges.');
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use.');
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
-};
+// Routes
+app.use('/api/auth', authRoutes);
 
-const server = http.createServer(app);
-
-server.on('error', errorHandler);
-server.on('listening', () => {
-  const address = server.address();
-  const bind = typeof address === 'string' ? 'pipe ' + address : 'port ' + port;
-  console.log('Listening on ' + bind);
+// Route de test
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Service d\'authentification actif',
+    timestamp: new Date().toISOString()
+  });
 });
 
-server.listen(port);
+// Gestion des erreurs 404
+app.use('*', (req, res) => {
+  res.status(404).json({ message: 'Route non trouvée' });
+});
+
+// Gestion des erreurs globales
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Erreur interne du serveur' });
+});
+
+app.listen(PORT, () => {
+  console.log(`Serveur démarré sur le port ${PORT}`);
+  console.log(`Environnement: ${process.env.NODE_ENV || 'development'}`);
+});
